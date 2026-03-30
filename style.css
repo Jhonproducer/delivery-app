@@ -2,6 +2,7 @@
 :root {
     --bg-app: #09090b;
     --bg-card: #18181b;
+    --bg-dark: #121214;
     --border: #27272a;
     --text-main: #f4f4f5;
     --text-muted: #a1a1aa;
@@ -9,6 +10,7 @@
     --gold-hover: #f59e0b;
     --blue: #3b82f6;
     --green: #22c55e;
+    --red: #ef4444;
     --danger: #ef4444;
 }
 
@@ -16,45 +18,51 @@
 
 body { background-color: var(--bg-app); color: var(--text-main); padding-bottom: 80px; }
 
-/* Header */
 .header { background-color: var(--bg-card); padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid var(--gold); position: sticky; top: 0; z-index: 100; }
 .logo h1 { font-size: 18px; font-weight: 900; color: var(--gold); letter-spacing: 1px; }
 .logo p { font-size: 10px; color: var(--text-muted); text-transform: uppercase; }
 .caja-total { text-align: right; }
-.caja-total span { display: block; font-size: 10px; }
-.caja-total strong { font-size: 20px; color: var(--green); font-weight: 900; }
+.caja-total span { display: flex; align-items: center; justify-content: flex-end; gap: 5px; font-size: 10px; }
+.btn-icon { background: none; border: none; font-size: 12px; cursor: pointer; padding: 2px; }
 
-/* Contenedores */
 .container { padding: 15px; max-width: 600px; margin: 0 auto; }
 .card { background-color: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; padding: 20px; margin-bottom: 15px; box-shadow: 0 4px 6px rgba(0,0,0,0.3); }
 .card h2 { font-size: 14px; text-transform: uppercase; margin-bottom: 12px; color: var(--text-muted); border-bottom: 1px solid var(--border); padding-bottom: 5px; }
 
-/* Formularios */
 .input { width: 100%; background-color: var(--bg-app); border: 1px solid var(--border); color: white; padding: 12px; border-radius: 8px; font-size: 14px; outline: none; margin-bottom: 10px; transition: 0.2s; }
 .input:focus { border-color: var(--gold); }
 .textarea { resize: vertical; min-height: 70px; }
 label { display: block; font-size: 11px; color: var(--text-muted); margin-bottom: 4px; text-transform: uppercase; }
 
-/* Tipografía y Utilidades */
+.bg-dark { background-color: var(--bg-dark); }
+.p-2 { padding: 10px; }
+.rounded { border-radius: 8px; }
+
 .text-gold { color: var(--gold); }
 .text-blue { color: var(--blue); }
 .text-green { color: var(--green); }
+.text-red { color: var(--red); }
 .text-muted { color: var(--text-muted); }
 .text-small { font-size: 11px; }
-.text-large { font-size: 22px; }
+.text-large { font-size: 24px; }
 .bold { font-weight: bold; }
 .mt-1 { margin-top: 10px; }
 .mt-2 { margin-top: 20px; }
-.mb-1 { margin-bottom: 10px; }
+.border-t { border-top: 1px solid var(--border); }
+.pt-1 { padding-top: 10px; }
 .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
 .flex-between { display: flex; justify-content: space-between; align-items: center; }
 .hidden { display: none !important; }
-.highlight { border-color: rgba(251, 191, 36, 0.3); }
 
-/* Botones */
-.btn { width: 100%; padding: 14px; border: none; border-radius: 8px; font-weight: 900; font-size: 14px; cursor: pointer; text-transform: uppercase; }
+.border-gold { border-color: var(--gold); }
+.border-blue { border-left: 3px solid var(--blue); }
+.border-red { border-left: 3px solid var(--red); }
+.preview-box { background-color: #121214; border: 1px dashed var(--gold); }
+
+.btn { width: 100%; padding: 14px; border: none; border-radius: 8px; font-weight: 900; font-size: 14px; cursor: pointer; text-transform: uppercase; transition: 0.2s; }
 .btn-gold { background-color: var(--gold); color: black; }
-.btn-gold:active { background-color: var(--gold-hover); }
+.btn-gold:active { transform: scale(0.98); }
+.btn-gold.disabled { background-color: #423512; color: #737373; cursor: not-allowed; }
 .btn-blue { background-color: var(--blue); color: white; width: auto; padding: 8px 12px; border-radius: 6px; }
 .btn-danger { background-color: transparent; border: 1px solid var(--danger); color: var(--danger); margin-top: 30px; }
 
@@ -62,21 +70,13 @@ label { display: block; font-size: 11px; color: var(--text-muted); margin-bottom
 .btn-tab { flex: 1; padding: 8px; background: var(--bg-app); border: 1px solid var(--border); color: var(--text-muted); border-radius: 6px; cursor: pointer; font-weight: bold; }
 .btn-tab.active { background: rgba(251, 191, 36, 0.1); border-color: var(--gold); color: var(--gold); }
 
-/* Logs / Historial */
 .logs-container { display: flex; flex-direction: column; gap: 10px; max-height: 60vh; overflow-y: auto; }
 .log-item { background: var(--bg-app); border-left: 3px solid var(--gold); padding: 12px; border-radius: 6px; }
 .log-header { display: flex; justify-content: space-between; margin-bottom: 5px; }
-.log-cliente { font-weight: bold; font-size: 14px; }
-.log-precio { font-weight: 900; color: var(--green); font-size: 16px; }
-.log-detalles { font-size: 11px; color: var(--text-muted); }
 
-/* Estadísticas */
 .stat-box { background: var(--bg-app); padding: 15px; border-radius: 8px; text-align: center; border-bottom: 2px solid; }
-.border-blue { border-color: var(--blue); }
-.border-green { border-color: var(--green); }
 .chart-container { position: relative; height: 200px; width: 100%; }
 
-/* Navegación Inferior */
 .bottom-nav { position: fixed; bottom: 0; width: 100%; background: var(--bg-card); border-top: 1px solid var(--border); display: flex; justify-content: space-around; padding: 10px 0; z-index: 100; }
 .nav-item { background: none; border: none; color: var(--text-muted); font-size: 10px; font-weight: bold; text-transform: uppercase; cursor: pointer; transition: 0.2s; }
 .nav-item.active { color: var(--gold); }
@@ -84,5 +84,4 @@ label { display: block; font-size: 11px; color: var(--text-muted); margin-bottom
 .view.active { display: block; }
 @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
 
-/* Mensaje Exito */
 .msg-success { background: rgba(34, 197, 94, 0.2); color: var(--green); border: 1px solid var(--green); padding: 10px; border-radius: 8px; text-align: center; font-weight: bold; font-size: 12px; margin-top: 15px; }
