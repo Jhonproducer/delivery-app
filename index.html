@@ -2,130 +2,124 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Joselito Delivery OS</title>
     <link rel="stylesheet" href="style.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
-<body>
+<body class="bg-ios">
 
-    <header class="header">
-        <div class="logo">
-            <h1>JOSELITO DELIVERY</h1>
-            <p>Sistema de Gestión Integral</p>
-        </div>
-        <div class="caja-total">
-            <span class="text-muted">Caja Fuerte <button onclick="editarCaja()" class="btn-icon">✏️</button></span>
-            <strong id="caja_global" class="text-green">$0.00</strong>
+    <header class="ios-header">
+        <div class="header-content">
+            <div class="logo">
+                <h1>JOSELITO</h1>
+                <p>DELIVERY OS</p>
+            </div>
+            <div class="caja-display" onclick="editarCaja()">
+                <span class="label-caja">CAJA FUERTE ✏️</span>
+                <strong id="caja_global">$0.00</strong>
+            </div>
         </div>
     </header>
 
-    <main class="container">
+    <main class="app-container">
         <section id="vista_operaciones" class="view active">
-            
-            <div class="card">
-                <h2>1. Registro del Viaje</h2>
-                <input type="text" id="inp_cliente" class="input" placeholder="Cliente o Referencia">
-                <textarea id="inp_desc" class="input textarea" placeholder="Descripción del envío..."></textarea>
-                <select id="inp_tipo" class="input">
+            <div class="ios-card">
+                <h2 class="ios-title">📝 Registro de Servicio</h2>
+                <input type="text" id="inp_cliente" class="ios-input" placeholder="Nombre del Cliente">
+                <textarea id="inp_desc" class="ios-input ios-textarea" placeholder="Descripción del pedido..."></textarea>
+                <select id="inp_tipo" class="ios-input ios-select">
                     <option value="Delivery">🍔 Delivery</option>
                     <option value="MotoTaxi">🏍️ MotoTaxi</option>
-                    <option value="Mandado">📦 Mandado</option>
+                    <option value="Mandado">📦 Mandado / Espera</option>
                 </select>
             </div>
 
-            <div class="card border-gold">
-                <h2 class="text-gold">2. Tarifa y Porcentajes</h2>
+            <div class="ios-card border-gold">
+                <h2 class="ios-title gold">💰 Cotizador Inteligente</h2>
+                <div class="ios-tabs">
+                    <button class="tab-btn active" id="btn_modo_km" onclick="setModo('km')">Distancia</button>
+                    <button class="tab-btn" id="btn_modo_plana" onclick="setModo('plana')">Fijo</button>
+                </div>
+
+                <div id="modo_km" class="grid-2">
+                    <div class="input-group">
+                        <label>Kilómetros</label>
+                        <input type="number" id="inp_km" class="ios-input center" placeholder="0.0" oninput="calcularPreview()">
+                    </div>
+                    <div class="input-group">
+                        <label>Precio x KM</label>
+                        <input type="number" id="inp_precio_km" class="ios-input center gold-text" placeholder="$0.0" oninput="calcularPreview()">
+                    </div>
+                </div>
+
+                <div id="modo_plana" class="hidden">
+                    <label>Monto Único</label>
+                    <input type="number" id="inp_monto_fijo" class="ios-input center gold-text" placeholder="$0.00" oninput="calcularPreview()">
+                </div>
+
+                <div class="grid-2 mt-15">
+                    <div class="input-group mini">
+                        <label>% Moto</label>
+                        <input type="number" id="inp_pct_moto" class="ios-input small" value="20" oninput="calcularPreview()">
+                    </div>
+                    <div class="input-group mini">
+                        <label>% Gasolina</label>
+                        <input type="number" id="inp_pct_gas" class="ios-input small" value="10" oninput="calcularPreview()">
+                    </div>
+                </div>
+            </div>
+
+            <div class="ios-preview">
+                <div class="row"><span>A Cobrar:</span> <strong class="gold-text">$<span id="prev_total">0.00</span></strong></div>
+                <div class="row small"><span>Fondo Moto:</span> <span class="blue-text">-$<span id="prev_moto">0.00</span></span></div>
+                <div class="row small"><span>Fondo Gas:</span> <span class="red-text">-$<span id="prev_gas">0.00</span></span></div>
+                <div class="row total"><span>NETO:</span> <strong class="green-text">$<span id="prev_neto">0.00</span></strong></div>
                 
-                <div class="tabs-tarifa">
-                    <button class="btn-tab active" onclick="setModo('km')">Por KM</button>
-                    <button class="btn-tab" onclick="setModo('plana')">Tarifa Plana</button>
-                </div>
-
-                <div id="modo_km" class="grid-2 mt-1">
-                    <div>
-                        <label>KM (Visto en Maps)</label>
-                        <input type="number" id="inp_km" class="input trigger-calc" placeholder="Ej: 5.5">
-                    </div>
-                    <div>
-                        <label>Precio x KM ($)</label>
-                        <input type="number" id="inp_precio_km" class="input text-gold bold trigger-calc" placeholder="Ej: 0.80">
-                    </div>
-                </div>
-
-                <div id="modo_plana" class="mt-1 hidden">
-                    <label>Monto Fijo Total ($)</label>
-                    <input type="number" id="inp_monto_fijo" class="input text-gold bold trigger-calc" placeholder="Ej: 5.00">
-                </div>
-
-                <div class="grid-2 mt-2 bg-dark p-2 rounded">
-                    <div>
-                        <label>Descuento Moto (%)</label>
-                        <input type="number" id="inp_pct_moto" class="input border-blue trigger-calc" value="20">
-                    </div>
-                    <div>
-                        <label>Descto Gasolina (%)</label>
-                        <input type="number" id="inp_pct_gas" class="input border-red trigger-calc" value="10">
-                    </div>
+                <div class="actions mt-15">
+                    <button onclick="enviarWaRapido()" class="ios-btn wa">WhatsApp</button>
+                    <button id="btn_guardar" onclick="registrarViaje()" class="ios-btn save disabled">Guardar Viaje</button>
                 </div>
             </div>
-
-            <div class="card preview-box">
-                <h2 class="text-muted">3. Previsualización</h2>
-                <div class="flex-between mt-1">
-                    <span class="text-small text-muted">A Cobrar al Cliente:</span>
-                    <strong class="text-large text-gold">$<span id="prev_total">0.00</span></strong>
-                </div>
-                <div class="flex-between mt-1 border-t pt-1">
-                    <span class="text-small text-muted">Para Moto (<span id="lbl_moto">20</span>%):</span>
-                    <strong class="text-blue">-$<span id="prev_moto">0.00</span></strong>
-                </div>
-                <div class="flex-between mt-1">
-                    <span class="text-small text-muted">Para Gasolina (<span id="lbl_gas">10</span>%):</span>
-                    <strong class="text-red">-$<span id="prev_gas">0.00</span></strong>
-                </div>
-                <div class="flex-between mt-1 border-t pt-1">
-                    <span class="bold">TU GANANCIA LÍQUIDA:</span>
-                    <strong class="text-large text-green">$<span id="prev_neto">0.00</span></strong>
-                </div>
-
-                <button id="btn_guardar" onclick="registrarViaje()" class="btn btn-gold mt-2 disabled">💾 REGISTRAR VIAJE</button>
-            </div>
-            
-            <div id="msg_exito" class="msg-success hidden">¡Viaje registrado y caja actualizada!</div>
+            <div id="msg_exito" class="toast hidden">¡Registrado!</div>
         </section>
 
         <section id="vista_logs" class="view hidden">
-            <div class="card flex-between">
-                <h2>Historial de Operaciones</h2>
-                <button onclick="exportarExcel()" class="btn btn-blue text-small">💾 EXPORTAR CSV</button>
+            <div class="sticky-sub">
+                <button onclick="exportarExcel()" class="ios-btn export">📥 Exportar Reporte Excel</button>
             </div>
-            <div id="lista_logs" class="logs-container"></div>
-            <button onclick="borrarHistorial()" class="btn btn-danger mt-2">🚨 BORRAR TODOS LOS DATOS</button>
+            <div id="lista_logs" class="ios-list"></div>
+            <button onclick="borrarHistorial()" class="danger-link">Borrar historial permanentemente</button>
         </section>
 
         <section id="vista_graficos" class="view hidden">
-            <div class="card">
-                <h2>Rendimiento Financiero</h2>
-                <div class="chart-container"><canvas id="miGrafico"></canvas></div>
-                <div class="grid-2 mt-2">
-                    <div class="stat-box border-blue">
-                        <span class="text-muted text-small">Fondo Moto Histórico</span>
-                        <strong class="text-blue text-large" id="stat_moto">$0.00</strong>
+            <div class="ios-card">
+                <h2 class="ios-title text-center">Rendimiento</h2>
+                <div class="chart-box"><canvas id="miGrafico"></canvas></div>
+                <div class="grid-2 mt-15">
+                    <div class="ios-stat blue">
+                        <span class="label">MOTO</span>
+                        <strong id="stat_moto">$0</strong>
                     </div>
-                    <div class="stat-box border-green">
-                        <span class="text-muted text-small">Ganancia Neta Histórica</span>
-                        <strong class="text-green text-large" id="stat_neta">$0.00</strong>
+                    <div class="ios-stat green">
+                        <span class="label">NETO</span>
+                        <strong id="stat_neta">$0</strong>
                     </div>
                 </div>
             </div>
         </section>
     </main>
 
-    <nav class="bottom-nav">
-        <button onclick="cambiarVista('vista_operaciones', this)" class="nav-item active">⚡<br>Operar</button>
-        <button onclick="cambiarVista('vista_logs', this)" class="nav-item">📋<br>Historial</button>
-        <button onclick="cambiarVista('vista_graficos', this)" class="nav-item">📊<br>Gráficos</button>
+    <nav class="ios-navbar">
+        <button id="nav_operar" onclick="cambiarVista('vista_operaciones', 'nav_operar')" class="nav-link active">
+            <span class="icon">⚡</span><span class="txt">Operar</span>
+        </button>
+        <button id="nav_logs" onclick="cambiarVista('vista_logs', 'nav_logs')" class="nav-link">
+            <span class="icon">📋</span><span class="txt">Historial</span>
+        </button>
+        <button id="nav_graficos" onclick="cambiarVista('vista_graficos', 'nav_graficos')" class="nav-link">
+            <span class="icon">📊</span><span class="txt">Gráficos</span>
+        </button>
     </nav>
 
     <script src="script.js"></script>
