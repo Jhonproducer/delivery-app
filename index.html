@@ -3,287 +3,66 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Guanipa-Tigre OS | Fellow Edition</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <style>
-        /* Ocultar barra de scroll para que parezca app nativa */
-        ::-webkit-scrollbar { width: 0px; background: transparent; }
-        .view-section { display: none; animation: fadeIn 0.3s; }
-        .view-section.active { display: block; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-    </style>
+    <title>Guanipa ERP | Control Total</title>
+    <link rel="stylesheet" href="style.css">
 </head>
-<body class="bg-[#0f172a] text-gray-200 font-sans pb-20 select-none">
+<body>
 
-    <header class="bg-[#1e293b] p-4 sticky top-0 z-50 border-b border-gray-800 flex justify-between items-center shadow-lg">
+    <header class="topbar">
         <div>
-            <h1 class="text-xl font-black text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-yellow-600">GUANIPA OS</h1>
-            <p class="text-[10px] text-gray-400 font-mono tracking-widest">ENTERPRISE EDITION</p>
+            <h1>GUANIPA ERP</h1>
+            <p>Control de Operaciones</p>
         </div>
-        <div class="text-right">
-            <p class="text-xs text-gray-400">Caja Actual</p>
-            <p class="text-lg font-bold text-green-400">$<span id="topBarCaja">0.00</span></p>
+        <div class="caja-diaria">
+            <span>CAJA HOY</span>
+            <strong id="ui_caja_hoy">$0.00</strong>
         </div>
     </header>
 
-    <main id="view-crm" class="view-section active p-4 max-w-lg mx-auto space-y-4">
-        <h2 class="text-sm font-bold text-gray-500 uppercase tracking-wider mb-2">Nuevo Servicio / Cotización</h2>
-        
-        <div class="bg-[#1e293b] p-4 rounded-xl border border-gray-700 shadow-xl space-y-4">
-            <input type="text" id="crm_cliente" placeholder="Cliente / Detalle del paquete" class="w-full bg-[#0f172a] border border-gray-700 p-3 rounded-lg focus:outline-none focus:border-yellow-500 text-sm">
+    <main class="container">
+        <section class="panel">
+            <h2 class="panel-title">1. Datos del Servicio</h2>
+            <div class="form-group">
+                <input type="text" id="in_cliente" placeholder="Cliente / Empresa" class="input-pro">
+                <input type="tel" id="in_tlf" placeholder="Teléfono" class="input-pro">
+            </div>
+            <textarea id="in_desc" placeholder="Descripción exacta del viaje o paquete..." class="input-pro textarea-pro"></textarea>
             
-            <div class="grid grid-cols-2 gap-3">
-                <select id="crm_tipo" class="w-full bg-[#0f172a] border border-gray-700 p-3 rounded-lg focus:outline-none focus:border-yellow-500 text-sm">
+            <div class="form-group">
+                <select id="in_tipo" class="input-pro select-pro">
                     <option value="Delivery">🍔 Delivery</option>
                     <option value="MotoTaxi">🏍️ MotoTaxi</option>
-                    <option value="Mandado">📦 Mandado/Espera</option>
+                    <option value="Mandado">📦 Mandado/Encomienda</option>
                 </select>
-                <input type="number" id="crm_km" step="0.1" placeholder="Distancia (KM)" class="w-full bg-[#0f172a] border border-gray-700 p-3 rounded-lg focus:outline-none focus:border-yellow-500 text-sm">
+                <input type="number" id="in_km" placeholder="KM (Opcional)" class="input-pro">
             </div>
+        </section>
 
-            <label class="flex items-center space-x-3 bg-[#0f172a] p-3 rounded-lg border border-gray-700">
-                <input type="checkbox" id="crm_interurbano" class="w-5 h-5 accent-yellow-500 rounded bg-gray-900 border-gray-700">
-                <span class="text-sm font-bold text-yellow-500">Bono Tigre-Guanipa (+ $1.50)</span>
-            </label>
-
-            <div class="bg-gray-900 p-3 rounded-lg border border-gray-800 flex justify-between items-center">
-                <span class="text-xs text-gray-400">Cálculo Automático:</span>
-                <span class="text-2xl font-black text-white">$<span id="crm_preview">0.00</span></span>
+        <section class="panel border-highlight">
+            <h2 class="panel-title text-highlight">2. Tu Tarifa (Tú decides el precio)</h2>
+            <div class="form-group">
+                <input type="number" id="in_precio_total" step="0.5" placeholder="Monto Total a Cobrar $" class="input-pro input-massive">
             </div>
-
-            <div class="grid grid-cols-2 gap-2 pt-2">
-                <button onclick="generarCotizacionWa()" class="bg-[#25D366] text-white font-bold py-3 rounded-lg text-xs shadow-lg hover:bg-[#1da851] transition">
-                    1. ENVIAR COTIZACIÓN
-                </button>
-                <button onclick="guardarPedido()" class="bg-yellow-500 text-black font-bold py-3 rounded-lg text-xs shadow-lg hover:bg-yellow-400 transition">
-                    2. REGISTRAR VIAJE
-                </button>
+            <button id="btn_calcular" class="btn btn-primary">CALCULAR FINANZAS</button>
+            
+            <div id="caja_resultados" class="resultados hidden">
+                <div class="res-row"><span class="label">Para la Moto (20%):</span> <strong class="val-moto">$<span id="res_moto">0.00</span></strong></div>
+                <div class="res-row"><span class="label">Ganancia Neta (80%):</span> <strong class="val-neto">$<span id="res_neto">0.00</span></strong></div>
+                
+                <div class="btn-group mt-15">
+                    <button id="btn_wa" class="btn btn-wa">📲 WHATSAPP</button>
+                    <button id="btn_guardar" class="btn btn-save">💾 EXPORTAR A EXCEL</button>
+                </div>
             </div>
-        </div>
+        </section>
 
-        <h2 class="text-sm font-bold text-gray-500 uppercase tracking-wider mt-6 mb-2">Viajes Activos Hoy</h2>
-        <div id="listaOperaciones" class="space-y-3 pb-6">
-            </div>
+        <section class="panel panel-danger">
+            <h2 class="panel-title text-danger">3. Control de Sistema</h2>
+            <p class="warning-text">Al cerrar la caja, se reinicia el contador diario de tu teléfono. Los datos en tu Excel seguirán intactos para tu control mensual/anual.</p>
+            <button id="btn_reset" class="btn btn-danger">🚨 CERRAR CAJA DEL DÍA</button>
+        </section>
     </main>
 
-    <main id="view-moto" class="view-section p-4 max-w-lg mx-auto space-y-4">
-        <h2 class="text-sm font-bold text-gray-500 uppercase tracking-wider mb-2">Telemetría del Vehículo</h2>
-
-        <div class="bg-[#1e293b] p-5 rounded-xl border border-gray-700 shadow-xl text-center relative overflow-hidden">
-            <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-blue-500 to-purple-500"></div>
-            <p class="text-xs text-gray-400 mb-1">ODÓMETRO DIGITAL</p>
-            <p class="text-4xl font-black tracking-widest text-white"><span id="moto_odo">0</span> <span class="text-lg text-gray-500">KM</span></p>
-            <p class="text-[10px] text-gray-500 mt-2">*Se actualiza solo al entregar pedidos</p>
-        </div>
-
-        <div class="bg-[#1e293b] p-5 rounded-xl border border-gray-700 shadow-xl space-y-4">
-            <div class="flex justify-between items-end mb-1">
-                <span class="text-sm font-bold text-gray-300">Aceite (Vida Útil)</span>
-                <span class="text-xs font-mono text-gray-400"><span id="moto_aceite_km">0</span> / 3000 km</span>
-            </div>
-            <div class="w-full bg-gray-900 rounded-full h-3 border border-gray-800">
-                <div id="barra_aceite" class="bg-yellow-500 h-2.5 rounded-full transition-all duration-500" style="width: 0%"></div>
-            </div>
-            <button onclick="resetAceite()" class="w-full mt-2 border border-gray-600 text-gray-400 hover:text-white text-xs py-2 rounded">
-                🔄 Registrar Cambio de Aceite
-            </button>
-        </div>
-
-        <div class="bg-[#1e293b] p-5 rounded-xl border border-gray-700 shadow-xl">
-            <h3 class="text-sm font-bold text-gray-300 mb-3">Fondo de Repuestos (Proyectado)</h3>
-            <p class="text-3xl font-bold text-blue-400">$<span id="moto_fondo">0.00</span></p>
-            <p class="text-xs text-gray-500 mt-1">Este dinero sale del 20% de tus viajes entregados. ¡No lo toques para comer!</p>
-        </div>
-    </main>
-
-    <main id="view-finanzas" class="view-section p-4 max-w-lg mx-auto space-y-4">
-        <h2 class="text-sm font-bold text-gray-500 uppercase tracking-wider mb-2">Estado de Resultados (Hoy)</h2>
-
-        <div class="grid grid-cols-2 gap-3">
-            <div class="bg-[#1e293b] p-4 rounded-xl border border-gray-700">
-                <p class="text-xs text-gray-400">Ingreso Bruto</p>
-                <p class="text-xl font-bold text-white">$<span id="fin_bruto">0.00</span></p>
-            </div>
-            <div class="bg-[#1e293b] p-4 rounded-xl border border-gray-700">
-                <p class="text-xs text-gray-400">Fondo Gasolina (15%)</p>
-                <p class="text-xl font-bold text-red-400">$<span id="fin_gas">0.00</span></p>
-            </div>
-            <div class="bg-[#1e293b] p-4 rounded-xl border border-green-900/50 col-span-2 shadow-[0_0_15px_rgba(34,197,94,0.1)]">
-                <p class="text-xs text-gray-400">GANANCIA NETA LÍQUIDA</p>
-                <p class="text-4xl font-black text-green-400">$<span id="fin_neto">0.00</span></p>
-            </div>
-        </div>
-
-        <button onclick="factoryReset()" class="w-full border border-red-900 text-red-500 font-bold py-3 rounded-lg text-xs hover:bg-red-900/20 mt-4">
-            ⚠️ CERRAR CAJA (RESETEAR DÍA Y VIAJES)
-        </button>
-    </main>
-
-    <nav class="fixed bottom-0 w-full bg-[#1e293b] border-t border-gray-800 flex justify-around p-2 z-50">
-        <button onclick="switchView('view-crm')" class="nav-btn flex-1 flex flex-col items-center py-2 text-yellow-500 transition-colors" data-target="view-crm">
-            <span class="text-xl mb-1">⚡</span><span class="text-[9px] font-bold tracking-widest">OPERACIONES</span>
-        </button>
-        <button onclick="switchView('view-moto')" class="nav-btn flex-1 flex flex-col items-center py-2 text-gray-500 hover:text-yellow-500 transition-colors" data-target="view-moto">
-            <span class="text-xl mb-1">🏍️</span><span class="text-[9px] font-bold tracking-widest">VEHÍCULO</span>
-        </button>
-        <button onclick="switchView('view-finanzas')" class="nav-btn flex-1 flex flex-col items-center py-2 text-gray-500 hover:text-yellow-500 transition-colors" data-target="view-finanzas">
-            <span class="text-xl mb-1">📊</span><span class="text-[9px] font-bold tracking-widest">FINANZAS</span>
-        </button>
-    </nav>
-
-    <script>
-        // CONFIGURACIÓN DEL NEGOCIO (Motor de Precios)
-        const CFG = { base: { 'Delivery': 1.0, 'MotoTaxi': 1.5, 'Mandado': 2.0 }, km: { 'Delivery': 0.6, 'MotoTaxi': 0.8, 'Mandado': 0.7 }, bono: 1.5, pctMoto: 0.20, pctGas: 0.15 };
-
-        // BASE DE DATOS LOCAL
-        let db = JSON.parse(localStorage.getItem('guanipaOS')) || { viajes: [], moto: { odo: 0, aceite: 0, fondo: 0 } };
-
-        // Listeners para cotizador en vivo
-        document.getElementById('crm_tipo').addEventListener('change', autoCotizar);
-        document.getElementById('crm_km').addEventListener('input', autoCotizar);
-        document.getElementById('crm_interurbano').addEventListener('change', autoCotizar);
-
-        function autoCotizar() {
-            const tipo = document.getElementById('crm_tipo').value;
-            const km = parseFloat(document.getElementById('crm_km').value) || 0;
-            const inter = document.getElementById('crm_interurbano').checked;
-            
-            let total = CFG.base[tipo] + (km * CFG.km[tipo]) + (inter ? CFG.bono : 0);
-            document.getElementById('crm_preview').innerText = (Math.ceil(total * 10) / 10).toFixed(2);
-        }
-
-        function generarCotizacionWa() {
-            autoCotizar();
-            const cliente = document.getElementById('crm_cliente').value || 'Cliente';
-            const total = document.getElementById('crm_preview').innerText;
-            const text = `¡Hola! ⚡ Cotización Express:\n📦 Detalle: ${cliente}\n💰 Total: *$${total}*\n\n¿Me confirmas para arrancar?`;
-            window.open(`https://wa.me/?text=${encodeURIComponent(text)}`);
-        }
-
-        function guardarPedido() {
-            const km = parseFloat(document.getElementById('crm_km').value);
-            if (!km || km <= 0) return alert("❌ Ingresa los KM primero.");
-            
-            const total = parseFloat(document.getElementById('crm_preview').innerText);
-            const fondoMoto = total * CFG.pctMoto;
-            const gas = total * CFG.pctGas;
-            
-            const viaje = {
-                id: Date.now(),
-                cliente: document.getElementById('crm_cliente').value || "Servicio General",
-                tipo: document.getElementById('crm_tipo').value,
-                km: km, total: total, moto: fondoMoto, gas: gas, neto: total - fondoMoto - gas,
-                estado: 'En Ruta' // Nace en ruta por defecto
-            };
-
-            db.viajes.unshift(viaje);
-            sincronizar();
-            
-            // Reset inputs
-            document.getElementById('crm_cliente').value = '';
-            document.getElementById('crm_km').value = '';
-            document.getElementById('crm_interurbano').checked = false;
-            autoCotizar();
-        }
-
-        function cambiarEstado(id, estado) {
-            const index = db.viajes.findIndex(v => v.id === id);
-            const viaje = db.viajes[index];
-            const estadoAnterior = viaje.estado;
-            
-            viaje.estado = estado;
-
-            // Lógica de Telemetría: Si pasa a Entregado, suma a la moto. Si se cancela, resta.
-            if (estado === 'Entregado' && estadoAnterior !== 'Entregado') {
-                db.moto.odo += viaje.km;
-                db.moto.aceite += viaje.km;
-                db.moto.fondo += viaje.moto;
-            } else if (estadoAnterior === 'Entregado' && estado !== 'Entregado') {
-                db.moto.odo -= viaje.km;
-                db.moto.aceite -= viaje.km;
-                db.moto.fondo -= viaje.moto;
-            }
-
-            sincronizar();
-        }
-
-        function resetAceite() {
-            if(confirm("¿Cambiaste el aceite hoy? Esto reiniciará el contador a 0 KM.")) {
-                db.moto.aceite = 0;
-                sincronizar();
-            }
-        }
-
-        function renderOperaciones() {
-            const container = document.getElementById('listaOperaciones');
-            container.innerHTML = '';
-            
-            db.viajes.forEach(v => {
-                let colorBorder = v.estado === 'Entregado' ? 'border-green-800 bg-green-900/10' : (v.estado === 'En Ruta' ? 'border-blue-800 bg-blue-900/10' : 'border-gray-800 bg-[#1e293b]');
-                if(v.estado === 'Cancelado') colorBorder = 'border-red-900/50 bg-red-900/10 opacity-50';
-
-                container.innerHTML += `
-                <div class="p-4 rounded-xl border ${colorBorder} shadow-md flex justify-between items-center">
-                    <div class="flex-1">
-                        <p class="font-bold text-white text-sm">${v.cliente}</p>
-                        <p class="text-[10px] text-gray-400 mt-1">${v.tipo} • ${v.km} KM • <span class="text-yellow-500 font-bold">$${v.total.toFixed(2)}</span></p>
-                    </div>
-                    <select onchange="cambiarEstado(${v.id}, this.value)" class="bg-[#0f172a] border border-gray-600 text-xs p-2 rounded outline-none font-bold ${v.estado === 'Entregado' ? 'text-green-400' : 'text-gray-300'}">
-                        <option value="En Ruta" ${v.estado === 'En Ruta' ? 'selected' : ''}>🔵 En Ruta</option>
-                        <option value="Entregado" ${v.estado === 'Entregado' ? 'selected' : ''}>🟢 Entregado</option>
-                        <option value="Cancelado" ${v.estado === 'Cancelado' ? 'selected' : ''}>🔴 Cancelado</option>
-                    </select>
-                </div>`;
-            });
-        }
-
-        function sincronizar() {
-            localStorage.setItem('guanipaOS', JSON.stringify(db));
-            renderOperaciones();
-            
-            // Finanzas Totales del Día
-            let bruto = 0, neto = 0, gas = 0;
-            db.viajes.filter(v => v.estado === 'Entregado').forEach(v => { bruto += v.total; neto += v.neto; gas += v.gas; });
-            
-            document.getElementById('topBarCaja').innerText = bruto.toFixed(2);
-            document.getElementById('fin_bruto').innerText = bruto.toFixed(2);
-            document.getElementById('fin_neto').innerText = neto.toFixed(2);
-            document.getElementById('fin_gas').innerText = gas.toFixed(2);
-
-            // Telemetría Moto
-            document.getElementById('moto_odo').innerText = db.moto.odo.toFixed(1);
-            document.getElementById('moto_aceite_km').innerText = db.moto.aceite.toFixed(1);
-            document.getElementById('moto_fondo').innerText = db.moto.fondo.toFixed(2);
-            
-            let pctAceite = (db.moto.aceite / 3000) * 100;
-            let barra = document.getElementById('barra_aceite');
-            barra.style.width = Math.min(pctAceite, 100) + '%';
-            barra.className = `h-2.5 rounded-full transition-all duration-500 ${pctAceite > 90 ? 'bg-red-500' : (pctAceite > 70 ? 'bg-orange-500' : 'bg-yellow-500')}`;
-        }
-
-        function factoryReset() {
-            if(confirm("⚠️ ¿Cerrar el día? Esto borra los viajes de hoy, PERO mantendrá el kilometraje y el fondo de tu moto intactos.")) {
-                db.viajes = [];
-                sincronizar();
-                switchView('view-crm');
-            }
-        }
-
-        // Navegación
-        function switchView(id) {
-            document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active'));
-            document.getElementById(id).classList.add('active');
-            
-            document.querySelectorAll('.nav-btn').forEach(btn => {
-                btn.classList.remove('text-yellow-500');
-                btn.classList.add('text-gray-500');
-            });
-            document.querySelector(`[data-target="${id}"]`).classList.remove('text-gray-500');
-            document.querySelector(`[data-target="${id}"]`).classList.add('text-yellow-500');
-        }
-
-        // Arranque
-        sincronizar();
-    </script>
+    <script src="script.js"></script>
 </body>
 </html>
