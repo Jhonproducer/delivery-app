@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Joselito Delivery OS | Pro</title>
     <link rel="stylesheet" href="style.css">
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js" defer></script>
 </head>
 <body class="bg-ios">
 
@@ -15,9 +15,9 @@
                 <h1>JOSELITO</h1>
                 <p>DELIVERY OS • VE</p>
             </div>
-            <div class="tasa-bcv-header">
-                <span class="label-bcv">BCV HOY</span>
-                <strong id="bcv_val_nav">0.00</strong>
+            <div class="tasa-bcv-header" onclick="fetchTasaBCV()">
+                <span class="label-bcv">BCV HOY 🔄</span>
+                <strong id="bcv_val_nav">Cargando...</strong>
             </div>
         </div>
     </header>
@@ -25,7 +25,7 @@
     <main class="app-container">
         <section id="vista_operaciones" class="view active">
             <div class="ios-card">
-                <h2 class="ios-title">📝 Registro de Servicio <span class="tooltip" title="Anota aquí quién pide y qué llevas">ℹ️</span></h2>
+                <h2 class="ios-title">📝 Registro de Servicio</h2>
                 <input type="text" id="inp_cliente" class="ios-input" placeholder="Nombre del Cliente">
                 <textarea id="inp_desc" class="ios-input ios-textarea" placeholder="Descripción del pedido..."></textarea>
             </div>
@@ -33,7 +33,7 @@
             <div class="ios-card border-gold">
                 <h2 class="ios-title gold">💰 Cotizador Multimoneda</h2>
                 <div class="ios-tabs">
-                    <button class="tab-btn active" id="btn_modo_km" onclick="setModo('km')">Por KM</button>
+                    <button class="tab-btn active" id="btn_modo_km" onclick="setModo('km')">Distancia</button>
                     <button class="tab-btn" id="btn_modo_plana" onclick="setModo('plana')">Fijo</button>
                 </div>
 
@@ -52,54 +52,65 @@
                     <label>Monto Único (USD)</label>
                     <input type="number" id="inp_monto_fijo" class="ios-input center gold-text" placeholder="0.00" oninput="calcularPreview()">
                 </div>
+
+                <div class="grid-2 mt-15">
+                    <div class="input-group">
+                        <label>% Moto</label>
+                        <input type="number" id="inp_pct_moto" class="ios-input small" value="20" oninput="calcularPreview()">
+                    </div>
+                    <div class="input-group">
+                        <label>% Gasolina</label>
+                        <input type="number" id="inp_pct_gas" class="ios-input small" value="10" oninput="calcularPreview()">
+                    </div>
+                </div>
             </div>
 
             <div class="ios-preview">
                 <div class="row total">
                     <span>A Cobrar:</span>
-                    <div class="price-stack">
+                    <div class="price-stack text-right">
                         <strong class="gold-text">$<span id="prev_total">0.00</span></strong>
                         <small class="bs-text">Bs <span id="prev_total_bs">0.00</span></small>
                     </div>
                 </div>
-                <div class="row small"><span>Fondo Moto:</span> <span class="blue-text">-$<span id="prev_moto">0.00</span></span></div>
+                <div class="row small mt-10"><span>Fondo Moto:</span> <span class="blue-text">-$<span id="prev_moto">0.00</span></span></div>
                 <div class="row total-neto"><span>NETO:</span> <strong class="green-text">$<span id="prev_neto">0.00</span></strong></div>
                 
                 <div class="actions mt-15">
-                    <button onclick="enviarWaRapido()" class="ios-btn wa">WhatsApp (Dólares/Bs)</button>
+                    <button onclick="enviarWaRapido()" class="ios-btn wa">WhatsApp (USD/Bs)</button>
                     <button id="btn_guardar" onclick="registrarViaje()" class="ios-btn save disabled">Guardar en Historial</button>
                 </div>
             </div>
+            <div id="msg_exito" class="toast hidden">¡Registrado!</div>
         </section>
 
         <section id="vista_logs" class="view hidden">
-            <div class="sticky-sub">
+            <div class="ios-card">
                 <button onclick="exportarExcel()" class="ios-btn export">📥 Descargar Reporte (.CSV)</button>
+                <div id="lista_logs" class="ios-list mt-15"></div>
+                <button onclick="borrarHistorial()" class="danger-link">Limpiar sistema completo</button>
             </div>
-            <div id="lista_logs" class="ios-list"></div>
         </section>
 
         <section id="vista_tasas" class="view hidden">
             <div class="ios-card text-center">
-                <h2 class="ios-title">Tipo de Cambio Oficial BCV</h2>
-                <p class="text-xs text-gray-500 mb-2">Sincronizado vía DolarApi.com</p>
+                <h2 class="ios-title">Tasa Oficial BCV</h2>
                 <div class="bcv-big-box">
                     <span class="bs-label">Bs.</span>
                     <h1 id="bcv_full_val">0.00</h1>
-                    <p id="bcv_fecha" class="text-[9px] text-gray-400 mt-1">Cargando fecha...</p>
+                    <p id="bcv_fecha" class="text-xs text-gray-500 mt-2">Sincronizando...</p>
                 </div>
-                <button onclick="fetchTasaBCV()" class="refresh-btn mt-2">🔄 Actualizar Tasa</button>
             </div>
 
             <div class="ios-card">
-                <h2 class="ios-title">Calculadora de Cambio</h2>
+                <h2 class="ios-title">Conversor Rápido</h2>
                 <div class="converter-box">
                     <div class="conv-row">
-                        <label>USD $</label>
+                        <label>Dólares ($)</label>
                         <input type="number" id="conv_usd" class="ios-input center" placeholder="0.00" oninput="convertirMoneda('usd')">
                     </div>
                     <div class="conv-row">
-                        <label>VES Bs.</label>
+                        <label>Bolívares (Bs)</label>
                         <input type="number" id="conv_bs" class="ios-input center" placeholder="0.00" oninput="convertirMoneda('bs')">
                     </div>
                 </div>
