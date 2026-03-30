@@ -1,115 +1,224 @@
 // script.js
 
-// ⚠️ PEGA AQUÍ TU ENLACE DE GOOGLE APPS SCRIPT
-const WEB_APP_URL = "TU_ENLACE_DE_GOOGLE_AQUI";
+// 1. BASE DE DATOS LOCAL
+let bd_joselito = JSON.parse(localStorage.getItem('joselito_db')) || [];
+let modoTarifa = 'km'; // por defecto
+let chartInstance = null; // Para el gráfico
 
-// Variables globales para la memoria del día
-let viajePendiente = {};
-let cajaDiaria = JSON.parse(localStorage.getItem('guanipaCaja')) || 0;
+// Inicializar la App
+window.onload = () => {
+    actualizarCajaGlobal();
+    renderizarLogs();
+    renderizarGrafico();
+};
 
-// Inicializar la interfaz al abrir
-document.getElementById('ui_caja_hoy').innerText = "$" + cajaDiaria.toFixed(2);
-
-// 1. Calcular Finanzas (Tú pones el precio, el sistema saca los porcentajes)
-document.getElementById('btn_calcular').addEventListener('click', () => {
-    const precioFijado = parseFloat(document.getElementById('in_precio_total').value);
+// 2. NAVEGACIÓN ENTRE PESTAÑAS
+function cambiarVista(idVista, btn) {
+    document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+    document.getElementById(idVista).classList.add('active');
     
-    if (!precioFijado || precioFijado <= 0) {
-        alert("Debes establecer un precio válido primero.");
-        return;
+    document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+
+    // Refrescar datos si entra a estadísticas
+    if (idVista === 'vista_graficos') renderizarGrafico();
+}
+
+// 3. CAMBIO DE MODO DE TARIFA
+function setModo(modo) {
+    modoTarifa = modo;
+    document.querySelectorAll('.btn-tab').forEach(b => b.classList.remove('active'));
+    event.target.classList.add('active');
+
+    if (modo === 'km') {
+        document.getElementById('modo_km').classList.remove('hidden');
+        document.getElementById('modo_plana').classList.add('hidden');
+    } else {
+        document.getElementById('modo_km').classList.add('hidden');
+        document.getElementById('modo_plana').classList.remove('hidden');
+    }
+}
+
+// 4. EL MOTOR DE CÁLCULO Y GUARDADO
+function calcularYGuardar() {
+    const cliente = document.getElementById('inp_cliente').value || "Cliente Mostrador";
+    const desc = document.getElementById('inp_desc').value || "Sin descripción";
+    const tipo = document.getElementById('inp_tipo').value;
+    
+    let totalCobrado = 0;
+    let kmRegistrado = 0;
+
+    // Lógica Matemática según lo que elegiste
+    if (modoTarifa === 'km') {
+        const km = parseFloat(document.getElementById('inp_km').value);
+        const precioKm = parseFloat(document.getElementById('inp_precio_km').value);
+        if (!km || !precioKm) return alert("Ingresa los KM y tu precio por KM.");
+        
+        kmRegistrado = km;
+        totalCobrado = km * precioKm;
+    } else {
+        const monto = parseFloat(document.getElementById('inp_monto_fijo').value);
+        if (!monto) return alert("Ingresa el monto fijo a cobrar.");
+        
+        kmRegistrado = "N/A";
+        totalCobrado = monto;
     }
 
-    const fondoMoto = precioFijado * 0.20;
-    const neto = precioFijado * 0.80; // 80% libre para ti (incluye tu gasolina y ganancia)
+    // Finanzas Internas
+    const fondoMoto = totalCobrado * 0.20;
+    const neto = totalCobrado * 0.80;
 
-    viajePendiente = {
-        total: precioFijado,
+    // Crear el Objeto del Viaje (Registro)
+    const fechaActual = new Date();
+    const nuevoViaje = {
+        id: Date.now(),
+        fecha: fechaActual.toLocaleDateString('es-VE'),
+        hora: fechaActual.toLocaleTimeString('es-VE', {hour: '2-digit', minute:'2-digit'}),
+        cliente: cliente,
+        descripcion: desc,
+        tipo: tipo,
+        km: kmRegistrado,
+        total: totalCobrado,
         moto: fondoMoto,
         neto: neto
     };
 
-    document.getElementById('res_moto').innerText = fondoMoto.toFixed(2);
-    document.getElementById('res_neto').innerText = neto.toFixed(2);
-    document.getElementById('caja_resultados').classList.remove('hidden');
-});
+    // Guardar en Base de Datos Local
+    bd_joselito.unshift(nuevoViaje); // Agrega al principio de la lista
+    localStorage.setItem('joselito_db', JSON.stringify(bd_joselito));
 
-// 2. Generar el WhatsApp
-document.getElementById('btn_wa').addEventListener('click', () => {
-    const cliente = document.getElementById('in_cliente').value || "Cliente";
-    const desc = document.getElementById('in_desc').value || "Servicio Solicitado";
-    const total = viajePendiente.total.toFixed(2);
-
-    const mensaje = `Hola *${cliente}* ⚡\n\nDetalle de tu servicio:\n📦 ${desc}\n\n💰 *Total a pagar: $${total}*\n\nConfírmame para proceder de inmediato. 🛵`;
-    window.open(`https://wa.me/?text=${encodeURIComponent(mensaje)}`, '_blank');
-});
-
-// 3. Exportar a Excel (Google Sheets) y Sumar a la Caja Diaria
-document.getElementById('btn_guardar').addEventListener('click', async () => {
-    const btn = document.getElementById('btn_guardar');
-    btn.innerText = "⏳ EXPORTANDO...";
-    btn.disabled = true;
-
-    const fechaAhora = new Date();
+    // Refrescar App
+    actualizarCajaGlobal();
+    renderizarLogs();
     
-    const payload = {
-        fecha: fechaAhora.toLocaleDateString('es-VE'),
-        hora: fechaAhora.toLocaleTimeString('es-VE', {hour: '2-digit', minute:'2-digit'}),
-        cliente: document.getElementById('in_cliente').value || "No especificado",
-        telefono: document.getElementById('in_tlf').value || "N/A",
-        descripcion: document.getElementById('in_desc').value || "N/A",
-        tipo: document.getElementById('in_tipo').value,
-        km: document.getElementById('in_km').value || "N/A",
-        total: viajePendiente.total.toFixed(2),
-        moto: viajePendiente.moto.toFixed(2),
-        neto: viajePendiente.neto.toFixed(2)
-    };
+    // Feedback visual
+    const msg = document.getElementById('msg_exito');
+    msg.classList.remove('hidden');
+    setTimeout(() => msg.classList.add('hidden'), 3000);
 
-    try {
-        await fetch(WEB_APP_URL, {
-            method: 'POST',
-            mode: 'no-cors', // Fundamental para evitar errores de CORS con Google
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(payload)
-        });
+    // Limpiar Formulario
+    document.getElementById('inp_cliente').value = '';
+    document.getElementById('inp_desc').value = '';
+    document.getElementById('inp_km').value = '';
+    document.getElementById('inp_monto_fijo').value = '';
+}
 
-        // Sumar a la caja del teléfono
-        cajaDiaria += viajePendiente.total;
-        localStorage.setItem('guanipaCaja', JSON.stringify(cajaDiaria));
-        document.getElementById('ui_caja_hoy').innerText = "$" + cajaDiaria.toFixed(2);
+// 5. RENDERIZAR CAJA Y LOGS (HISTORIAL)
+function actualizarCajaGlobal() {
+    let granTotal = bd_joselito.reduce((sum, viaje) => sum + viaje.total, 0);
+    document.getElementById('caja_global').innerText = "$" + granTotal.toFixed(2);
+}
 
-        // Feedback Visual
-        btn.innerText = "✅ EXPORTADO";
-        btn.style.backgroundColor = "#16a34a";
+function renderizarLogs() {
+    const contenedor = document.getElementById('lista_logs');
+    contenedor.innerHTML = '';
 
-        // Limpieza de panel
-        setTimeout(() => {
-            document.getElementById('in_cliente').value = '';
-            document.getElementById('in_tlf').value = '';
-            document.getElementById('in_desc').value = '';
-            document.getElementById('in_km').value = '';
-            document.getElementById('in_precio_total').value = '';
-            document.getElementById('caja_resultados').classList.add('hidden');
-            
-            btn.innerText = "💾 EXPORTAR A EXCEL";
-            btn.style.backgroundColor = "#2563eb";
-            btn.disabled = false;
-        }, 2000);
-
-    } catch (error) {
-        alert("Hubo un fallo de conexión. Intenta de nuevo.");
-        btn.innerText = "❌ ERROR AL EXPORTAR";
-        btn.disabled = false;
+    if (bd_joselito.length === 0) {
+        contenedor.innerHTML = '<p class="text-muted text-small text-center mt-2">No hay viajes registrados aún.</p>';
+        return;
     }
-});
 
-// 4. Reset del Sistema Local (Cierre de Caja)
-document.getElementById('btn_reset').addEventListener('click', () => {
-    const confirmacion = confirm("⚠️ ATENCIÓN: Esto pondrá el contador de tu teléfono en $0.00. (Tus datos seguirán a salvo en Google Sheets). ¿Estás seguro?");
+    bd_joselito.forEach(v => {
+        contenedor.innerHTML += `
+        <div class="log-item">
+            <div class="log-header">
+                <span class="log-cliente">${v.cliente}</span>
+                <span class="log-precio">$${v.total.toFixed(2)}</span>
+            </div>
+            <div class="log-detalles">
+                📅 ${v.fecha} - 🕒 ${v.hora} <br>
+                🚚 ${v.tipo} | 📏 ${v.km} KM <br>
+                <em>"${v.descripcion}"</em>
+            </div>
+        </div>
+        `;
+    });
+}
+
+// 6. EXPORTADOR A EXCEL (CSV) DIRECTO DESDE EL TELÉFONO
+function exportarExcel() {
+    if (bd_joselito.length === 0) return alert("No hay datos para exportar.");
+
+    // Crear cabeceras del Excel
+    let csvContent = "data:text/csv;charset=utf-8,";
+    csvContent += "Fecha,Hora,Cliente,Descripcion,Tipo,KM,Total Cobrado ($),Fondo Moto ($),Ganancia Neta ($)\n";
+
+    // Llenar filas
+    bd_joselito.forEach(v => {
+        let fila = `"${v.fecha}","${v.hora}","${v.cliente}","${v.descripcion}","${v.tipo}","${v.km}","${v.total.toFixed(2)}","${v.moto.toFixed(2)}","${v.neto.toFixed(2)}"`;
+        csvContent += fila + "\n";
+    });
+
+    // Crear el archivo virtual y forzar descarga
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement("a");
+    link.setAttribute("href", encodedUri);
+    link.setAttribute("download", `Joselito_Reporte_${new Date().toLocaleDateString('es-VE')}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+}
+
+// 7. SISTEMA DE GRÁFICOS (CHART.JS)
+function renderizarGrafico() {
+    let totalMoto = 0;
+    let totalNeto = 0;
+
+    // Agrupar ganancias por tipo de servicio para el gráfico
+    let ingresosPorTipo = { 'Delivery': 0, 'MotoTaxi': 0, 'Mandado': 0 };
+
+    bd_joselito.forEach(v => {
+        totalMoto += v.moto;
+        totalNeto += v.neto;
+        if(ingresosPorTipo[v.tipo] !== undefined) {
+            ingresosPorTipo[v.tipo] += v.total;
+        }
+    });
+
+    document.getElementById('stat_moto').innerText = "$" + totalMoto.toFixed(2);
+    document.getElementById('stat_neta').innerText = "$" + totalNeto.toFixed(2);
+
+    const ctx = document.getElementById('miGrafico').getContext('2d');
     
-    if (confirmacion) {
-        cajaDiaria = 0;
-        localStorage.setItem('guanipaCaja', JSON.stringify(cajaDiaria));
-        document.getElementById('ui_caja_hoy').innerText = "$0.00";
-        alert("Caja reiniciada con éxito. ¡Listo para un nuevo día de trabajo!");
+    // Destruir gráfico anterior si existe para que no se sobrepongan
+    if (chartInstance) chartInstance.destroy();
+
+    chartInstance = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: ['Delivery', 'MotoTaxi', 'Mandado'],
+            datasets: [{
+                label: 'Ingresos por Servicio ($)',
+                data: [ingresosPorTipo['Delivery'], ingresosPorTipo['MotoTaxi'], ingresosPorTipo['Mandado']],
+                backgroundColor: ['#3b82f6', '#fbbf24', '#22c55e'],
+                borderRadius: 5
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { display: false }
+            },
+            scales: {
+                y: { beginAtZero: true, grid: { color: '#27272a' }, ticks: { color: '#a1a1aa' } },
+                x: { grid: { display: false }, ticks: { color: '#a1a1aa' } }
+            }
+        }
+    });
+}
+
+// 8. BORRADO SEGURO
+function borrarHistorial() {
+    const codigo = prompt("Peligro: Esto borrará tu historial permanentemente. Escribe '1234' para confirmar:");
+    if (codigo === '1234') {
+        localStorage.removeItem('joselito_db');
+        bd_joselito = [];
+        actualizarCajaGlobal();
+        renderizarLogs();
+        renderizarGrafico();
+        alert("Base de datos borrada con éxito.");
+    } else {
+        alert("Borrado cancelado. Código incorrecto.");
     }
-});
+}
