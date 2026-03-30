@@ -3,65 +3,104 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Guanipa ERP | Control Total</title>
+    <title>Joselito Delivery OS</title>
     <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
 
-    <header class="topbar">
-        <div>
-            <h1>GUANIPA ERP</h1>
-            <p>Control de Operaciones</p>
+    <header class="header">
+        <div class="logo">
+            <h1>JOSELITO DELIVERY</h1>
+            <p>Sistema de Gestión Integral</p>
         </div>
-        <div class="caja-diaria">
-            <span>CAJA HOY</span>
-            <strong id="ui_caja_hoy">$0.00</strong>
+        <div class="caja-total">
+            <span class="text-muted">Caja Fuerte</span>
+            <strong id="caja_global">$0.00</strong>
         </div>
     </header>
 
     <main class="container">
-        <section class="panel">
-            <h2 class="panel-title">1. Datos del Servicio</h2>
-            <div class="form-group">
-                <input type="text" id="in_cliente" placeholder="Cliente / Empresa" class="input-pro">
-                <input type="tel" id="in_tlf" placeholder="Teléfono" class="input-pro">
-            </div>
-            <textarea id="in_desc" placeholder="Descripción exacta del viaje o paquete..." class="input-pro textarea-pro"></textarea>
-            
-            <div class="form-group">
-                <select id="in_tipo" class="input-pro select-pro">
+        <section id="vista_operaciones" class="view active">
+            <div class="card">
+                <h2>1. Registro del Viaje</h2>
+                <input type="text" id="inp_cliente" class="input" placeholder="Cliente o Referencia">
+                <textarea id="inp_desc" class="input textarea" placeholder="Descripción del envío..."></textarea>
+                <select id="inp_tipo" class="input">
                     <option value="Delivery">🍔 Delivery</option>
                     <option value="MotoTaxi">🏍️ MotoTaxi</option>
-                    <option value="Mandado">📦 Mandado/Encomienda</option>
+                    <option value="Mandado">📦 Mandado</option>
                 </select>
-                <input type="number" id="in_km" placeholder="KM (Opcional)" class="input-pro">
             </div>
+
+            <div class="card highlight">
+                <h2 class="text-gold">2. Tu Tarifa Dinámica</h2>
+                <div class="tabs-tarifa">
+                    <button class="btn-tab active" onclick="setModo('km')">Por KM</button>
+                    <button class="btn-tab" onclick="setModo('plana')">Tarifa Plana</button>
+                </div>
+
+                <div id="modo_km" class="grid-2 mt-1">
+                    <div>
+                        <label>Distancia (KM)</label>
+                        <input type="number" id="inp_km" class="input" placeholder="Ej: 5.5">
+                    </div>
+                    <div>
+                        <label>Precio x KM ($)</label>
+                        <input type="number" id="inp_precio_km" class="input text-gold bold" placeholder="Ej: 0.80">
+                    </div>
+                </div>
+
+                <div id="modo_plana" class="mt-1 hidden">
+                    <label>Monto Fijo ($)</label>
+                    <input type="number" id="inp_monto_fijo" class="input text-gold bold" placeholder="Ej: 5.00">
+                </div>
+
+                <button onclick="calcularYGuardar()" class="btn btn-gold mt-2">CALCULAR Y GUARDAR</button>
+            </div>
+            
+            <div id="msg_exito" class="msg-success hidden">¡Viaje registrado en tu base de datos!</div>
         </section>
 
-        <section class="panel border-highlight">
-            <h2 class="panel-title text-highlight">2. Tu Tarifa (Tú decides el precio)</h2>
-            <div class="form-group">
-                <input type="number" id="in_precio_total" step="0.5" placeholder="Monto Total a Cobrar $" class="input-pro input-massive">
+        <section id="vista_logs" class="view hidden">
+            <div class="card flex-between">
+                <h2>Historial de Operaciones</h2>
+                <button onclick="exportarExcel()" class="btn btn-blue text-small">💾 EXPORTAR EXCEL</button>
             </div>
-            <button id="btn_calcular" class="btn btn-primary">CALCULAR FINANZAS</button>
             
-            <div id="caja_resultados" class="resultados hidden">
-                <div class="res-row"><span class="label">Para la Moto (20%):</span> <strong class="val-moto">$<span id="res_moto">0.00</span></strong></div>
-                <div class="res-row"><span class="label">Ganancia Neta (80%):</span> <strong class="val-neto">$<span id="res_neto">0.00</span></strong></div>
+            <div id="lista_logs" class="logs-container">
+                </div>
+            
+            <button onclick="borrarHistorial()" class="btn btn-danger mt-2">🚨 BORRAR TODOS LOS DATOS</button>
+        </section>
+
+        <section id="vista_graficos" class="view hidden">
+            <div class="card">
+                <h2>Rendimiento Financiero</h2>
+                <p class="text-muted text-small mb-1">Ganancias generadas en los últimos viajes</p>
+                <div class="chart-container">
+                    <canvas id="miGrafico"></canvas>
+                </div>
                 
-                <div class="btn-group mt-15">
-                    <button id="btn_wa" class="btn btn-wa">📲 WHATSAPP</button>
-                    <button id="btn_guardar" class="btn btn-save">💾 EXPORTAR A EXCEL</button>
+                <div class="grid-2 mt-2">
+                    <div class="stat-box border-blue">
+                        <span class="text-muted text-small">Fondo Moto Total</span>
+                        <strong class="text-blue text-large" id="stat_moto">$0.00</strong>
+                    </div>
+                    <div class="stat-box border-green">
+                        <span class="text-muted text-small">Tu Ganancia Neta</span>
+                        <strong class="text-green text-large" id="stat_neta">$0.00</strong>
+                    </div>
                 </div>
             </div>
         </section>
-
-        <section class="panel panel-danger">
-            <h2 class="panel-title text-danger">3. Control de Sistema</h2>
-            <p class="warning-text">Al cerrar la caja, se reinicia el contador diario de tu teléfono. Los datos en tu Excel seguirán intactos para tu control mensual/anual.</p>
-            <button id="btn_reset" class="btn btn-danger">🚨 CERRAR CAJA DEL DÍA</button>
-        </section>
     </main>
+
+    <nav class="bottom-nav">
+        <button onclick="cambiarVista('vista_operaciones', this)" class="nav-item active">⚡<br>Operar</button>
+        <button onclick="cambiarVista('vista_logs', this)" class="nav-item">📋<br>Historial</button>
+        <button onclick="cambiarVista('vista_graficos', this)" class="nav-item">📊<br>Gráficos</button>
+    </nav>
 
     <script src="script.js"></script>
 </body>
