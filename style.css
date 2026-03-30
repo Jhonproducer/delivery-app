@@ -1,58 +1,88 @@
 /* style.css */
 :root {
-    --bg-main: #0f172a;
-    --bg-panel: #1e293b;
-    --border: #334155;
-    --text-main: #f8fafc;
-    --text-muted: #94a3b8;
-    --accent: #eab308;
-    --moto: #3b82f6;
-    --neto: #22c55e;
+    --bg-app: #09090b;
+    --bg-card: #18181b;
+    --border: #27272a;
+    --text-main: #f4f4f5;
+    --text-muted: #a1a1aa;
+    --gold: #fbbf24;
+    --gold-hover: #f59e0b;
+    --blue: #3b82f6;
+    --green: #22c55e;
     --danger: #ef4444;
 }
 
-* { box-sizing: border-box; margin: 0; padding: 0; font-family: system-ui, -apple-system, sans-serif; }
+* { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
 
-body { background-color: var(--bg-main); color: var(--text-main); padding-bottom: 2rem; }
+body { background-color: var(--bg-app); color: var(--text-main); padding-bottom: 80px; }
 
-.topbar { background-color: var(--bg-panel); padding: 1rem; display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid var(--accent); position: sticky; top: 0; z-index: 100; box-shadow: 0 4px 12px rgba(0,0,0,0.5); }
-.topbar h1 { font-size: 1.2rem; font-weight: 900; color: var(--accent); letter-spacing: 1px; }
-.topbar p { font-size: 0.7rem; color: var(--text-muted); text-transform: uppercase; }
-.caja-diaria { text-align: right; }
-.caja-diaria span { display: block; font-size: 0.65rem; color: var(--text-muted); }
-.caja-diaria strong { font-size: 1.2rem; color: var(--neto); }
+/* Header */
+.header { background-color: var(--bg-card); padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid var(--gold); position: sticky; top: 0; z-index: 100; }
+.logo h1 { font-size: 18px; font-weight: 900; color: var(--gold); letter-spacing: 1px; }
+.logo p { font-size: 10px; color: var(--text-muted); text-transform: uppercase; }
+.caja-total { text-align: right; }
+.caja-total span { display: block; font-size: 10px; }
+.caja-total strong { font-size: 20px; color: var(--green); font-weight: 900; }
 
-.container { padding: 1rem; max-w-width: 500px; margin: 0 auto; display: flex; flex-direction: column; gap: 1rem; }
+/* Contenedores */
+.container { padding: 15px; max-width: 600px; margin: 0 auto; }
+.card { background-color: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; padding: 20px; margin-bottom: 15px; box-shadow: 0 4px 6px rgba(0,0,0,0.3); }
+.card h2 { font-size: 14px; text-transform: uppercase; margin-bottom: 12px; color: var(--text-muted); border-bottom: 1px solid var(--border); padding-bottom: 5px; }
 
-.panel { background-color: var(--bg-panel); border: 1px solid var(--border); border-radius: 10px; padding: 1.2rem; box-shadow: 0 4px 6px rgba(0,0,0,0.2); }
-.panel-title { font-size: 0.85rem; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 1rem; color: var(--text-muted); border-bottom: 1px solid var(--border); padding-bottom: 0.5rem; }
+/* Formularios */
+.input { width: 100%; background-color: var(--bg-app); border: 1px solid var(--border); color: white; padding: 12px; border-radius: 8px; font-size: 14px; outline: none; margin-bottom: 10px; transition: 0.2s; }
+.input:focus { border-color: var(--gold); }
+.textarea { resize: vertical; min-height: 70px; }
+label { display: block; font-size: 11px; color: var(--text-muted); margin-bottom: 4px; text-transform: uppercase; }
 
-.form-group { display: flex; gap: 0.5rem; margin-bottom: 0.75rem; }
-.input-pro { width: 100%; background-color: var(--bg-main); border: 1px solid var(--border); color: white; padding: 0.8rem; border-radius: 6px; font-size: 0.9rem; outline: none; }
-.input-pro:focus { border-color: var(--accent); }
-.textarea-pro { resize: vertical; min-height: 60px; margin-bottom: 0.75rem; }
-.input-massive { font-size: 1.5rem; font-weight: bold; color: var(--accent); text-align: center; }
-
-.border-highlight { border-color: var(--accent); box-shadow: 0 0 10px rgba(234, 179, 8, 0.1); }
-.text-highlight { color: var(--accent); }
-
-.btn { width: 100%; padding: 1rem; border: none; border-radius: 6px; font-weight: 900; font-size: 0.9rem; cursor: pointer; text-transform: uppercase; transition: opacity 0.2s; }
-.btn:active { opacity: 0.8; }
-.btn-primary { background-color: var(--accent); color: black; }
-.btn-wa { background-color: #25D366; color: white; flex: 1; }
-.btn-save { background-color: #2563eb; color: white; flex: 1; }
-.btn-danger { background-color: rgba(239, 68, 68, 0.2); color: var(--danger); border: 1px solid var(--danger); }
-
-.btn-group { display: flex; gap: 0.5rem; margin-top: 1rem; }
-.mt-15 { margin-top: 15px; }
-
-.resultados { margin-top: 1rem; background-color: var(--bg-main); padding: 1rem; border-radius: 6px; border: 1px solid var(--border); }
-.res-row { display: flex; justify-content: space-between; margin-bottom: 0.5rem; font-size: 0.9rem; }
-.val-moto { color: var(--moto); }
-.val-neto { color: var(--neto); }
-
-.panel-danger { border-color: rgba(239, 68, 68, 0.3); }
-.text-danger { color: var(--danger); }
-.warning-text { font-size: 0.75rem; color: var(--text-muted); margin-bottom: 1rem; line-height: 1.4; }
-
+/* Tipografía y Utilidades */
+.text-gold { color: var(--gold); }
+.text-blue { color: var(--blue); }
+.text-green { color: var(--green); }
+.text-muted { color: var(--text-muted); }
+.text-small { font-size: 11px; }
+.text-large { font-size: 22px; }
+.bold { font-weight: bold; }
+.mt-1 { margin-top: 10px; }
+.mt-2 { margin-top: 20px; }
+.mb-1 { margin-bottom: 10px; }
+.grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.flex-between { display: flex; justify-content: space-between; align-items: center; }
 .hidden { display: none !important; }
+.highlight { border-color: rgba(251, 191, 36, 0.3); }
+
+/* Botones */
+.btn { width: 100%; padding: 14px; border: none; border-radius: 8px; font-weight: 900; font-size: 14px; cursor: pointer; text-transform: uppercase; }
+.btn-gold { background-color: var(--gold); color: black; }
+.btn-gold:active { background-color: var(--gold-hover); }
+.btn-blue { background-color: var(--blue); color: white; width: auto; padding: 8px 12px; border-radius: 6px; }
+.btn-danger { background-color: transparent; border: 1px solid var(--danger); color: var(--danger); margin-top: 30px; }
+
+.tabs-tarifa { display: flex; gap: 10px; margin-bottom: 15px; }
+.btn-tab { flex: 1; padding: 8px; background: var(--bg-app); border: 1px solid var(--border); color: var(--text-muted); border-radius: 6px; cursor: pointer; font-weight: bold; }
+.btn-tab.active { background: rgba(251, 191, 36, 0.1); border-color: var(--gold); color: var(--gold); }
+
+/* Logs / Historial */
+.logs-container { display: flex; flex-direction: column; gap: 10px; max-height: 60vh; overflow-y: auto; }
+.log-item { background: var(--bg-app); border-left: 3px solid var(--gold); padding: 12px; border-radius: 6px; }
+.log-header { display: flex; justify-content: space-between; margin-bottom: 5px; }
+.log-cliente { font-weight: bold; font-size: 14px; }
+.log-precio { font-weight: 900; color: var(--green); font-size: 16px; }
+.log-detalles { font-size: 11px; color: var(--text-muted); }
+
+/* Estadísticas */
+.stat-box { background: var(--bg-app); padding: 15px; border-radius: 8px; text-align: center; border-bottom: 2px solid; }
+.border-blue { border-color: var(--blue); }
+.border-green { border-color: var(--green); }
+.chart-container { position: relative; height: 200px; width: 100%; }
+
+/* Navegación Inferior */
+.bottom-nav { position: fixed; bottom: 0; width: 100%; background: var(--bg-card); border-top: 1px solid var(--border); display: flex; justify-content: space-around; padding: 10px 0; z-index: 100; }
+.nav-item { background: none; border: none; color: var(--text-muted); font-size: 10px; font-weight: bold; text-transform: uppercase; cursor: pointer; transition: 0.2s; }
+.nav-item.active { color: var(--gold); }
+.view { display: none; animation: fadeIn 0.3s ease; }
+.view.active { display: block; }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+
+/* Mensaje Exito */
+.msg-success { background: rgba(34, 197, 94, 0.2); color: var(--green); border: 1px solid var(--green); padding: 10px; border-radius: 8px; text-align: center; font-weight: bold; font-size: 12px; margin-top: 15px; }
