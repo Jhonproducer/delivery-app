@@ -1,261 +1,165 @@
-// script.js
+// script.js (Joselito OS Premium)
 
-// 1. BASES DE DATOS LOCALES
 let bd_joselito = JSON.parse(localStorage.getItem('joselito_db')) || [];
 let cajaFuerte = parseFloat(localStorage.getItem('joselito_caja')) || 0;
 let modoTarifa = 'km'; 
-let chartInstance = null; 
-
-// Variable temporal para guardar el cálculo de la previsualización
 let calculoTemporal = null;
+let chartInstance = null;
 
-// Inicializar la App
+// Inicialización
 window.onload = () => {
     actualizarCajaVisual();
+    calcularPreview();
     renderizarLogs();
-    renderizarGrafico();
-    
-    // Asignar el "escuchador" a todos los inputs para la previsualización en vivo
-    document.querySelectorAll('.trigger-calc').forEach(input => {
-        input.addEventListener('input', calcularPreview);
-    });
 };
 
-// 2. NAVEGACIÓN
-function cambiarVista(idVista, btn) {
-    document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+function cambiarVista(idVista, btnId) {
+    document.querySelectorAll('.view').forEach(v => v.classList.add('hidden'));
+    document.getElementById(idVista).classList.remove('hidden');
     document.getElementById(idVista).classList.add('active');
     
-    document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
-    btn.classList.add('active');
+    document.querySelectorAll('.nav-link').forEach(b => b.classList.remove('active'));
+    document.getElementById(btnId).classList.add('active');
 
     if (idVista === 'vista_graficos') renderizarGrafico();
 }
 
 function setModo(modo) {
     modoTarifa = modo;
-    document.querySelectorAll('.btn-tab').forEach(b => b.classList.remove('active'));
-    event.target.classList.add('active');
-
+    document.getElementById('btn_modo_km').classList.remove('active');
+    document.getElementById('btn_modo_plana').classList.remove('active');
+    
     if (modo === 'km') {
+        document.getElementById('btn_modo_km').classList.add('active');
         document.getElementById('modo_km').classList.remove('hidden');
         document.getElementById('modo_plana').classList.add('hidden');
     } else {
+        document.getElementById('btn_modo_plana').classList.add('active');
         document.getElementById('modo_km').classList.add('hidden');
         document.getElementById('modo_plana').classList.remove('hidden');
     }
-    calcularPreview(); // Recalcular la vista previa al cambiar de modo
+    calcularPreview();
 }
 
-// 3. CAJA FUERTE EDITABLE MANUALMENTE
+function editarCaja() {
+    let m = prompt("Ajustar caja fuerte:", cajaFuerte.toFixed(2));
+    if (m && !isNaN(m)) {
+        cajaFuerte = parseFloat(m);
+        actualizarCajaVisual();
+    }
+}
+
 function actualizarCajaVisual() {
     document.getElementById('caja_global').innerText = "$" + cajaFuerte.toFixed(2);
     localStorage.setItem('joselito_caja', cajaFuerte);
 }
 
-function editarCaja() {
-    let nuevoMonto = prompt("Ingresa el monto exacto que tienes en tu caja actualmente:", cajaFuerte.toFixed(2));
-    if (nuevoMonto !== null && !isNaN(nuevoMonto) && nuevoMonto !== "") {
-        cajaFuerte = parseFloat(nuevoMonto);
-        actualizarCajaVisual();
-    }
-}
-
-// 4. MOTOR DE CÁLCULO EN VIVO (PREVISUALIZACIÓN)
 function calcularPreview() {
-    let totalCobrado = 0;
-    let kmRegistrado = "N/A";
+    let total = 0;
+    let kmReg = "N/A";
+    let pMoto = parseFloat(document.getElementById('inp_pct_moto').value) || 0;
+    let pGas = parseFloat(document.getElementById('inp_pct_gas').value) || 0;
 
-    // Extraer porcentajes manuales
-    let pctMoto = parseFloat(document.getElementById('inp_pct_moto').value) || 0;
-    let pctGas = parseFloat(document.getElementById('inp_pct_gas').value) || 0;
-
-    // Actualizar etiquetas visuales
-    document.getElementById('lbl_moto').innerText = pctMoto;
-    document.getElementById('lbl_gas').innerText = pctGas;
-
-    // Lógica Matemática
     if (modoTarifa === 'km') {
-        const km = parseFloat(document.getElementById('inp_km').value);
-        const precioKm = parseFloat(document.getElementById('inp_precio_km').value);
-        
-        if (km > 0 && precioKm > 0) {
-            kmRegistrado = km;
-            totalCobrado = km * precioKm;
-        }
+        let k = parseFloat(document.getElementById('inp_km').value) || 0;
+        let p = parseFloat(document.getElementById('inp_precio_km').value) || 0;
+        if (k > 0 && p > 0) { total = k * p; kmReg = k; }
     } else {
-        const monto = parseFloat(document.getElementById('inp_monto_fijo').value);
-        if (monto > 0) {
-            totalCobrado = monto;
-        }
+        total = parseFloat(document.getElementById('inp_monto_fijo').value) || 0;
     }
 
-    // Finanzas Internas
-    const descMoto = totalCobrado * (pctMoto / 100);
-    const descGas = totalCobrado * (pctGas / 100);
-    const neto = totalCobrado - descMoto - descGas;
+    let dMoto = total * (pMoto / 100);
+    let dGas = total * (pGas / 100);
+    let neto = total - dMoto - dGas;
 
-    // Imprimir en la tarjeta de previsualización
-    document.getElementById('prev_total').innerText = totalCobrado.toFixed(2);
-    document.getElementById('prev_moto').innerText = descMoto.toFixed(2);
-    document.getElementById('prev_gas').innerText = descGas.toFixed(2);
+    document.getElementById('prev_total').innerText = total.toFixed(2);
+    document.getElementById('prev_moto').innerText = dMoto.toFixed(2);
+    document.getElementById('prev_gas').innerText = dGas.toFixed(2);
     document.getElementById('prev_neto').innerText = neto.toFixed(2);
+    document.getElementById('lbl_moto').innerText = pMoto;
+    document.getElementById('lbl_gas').innerText = pGas;
 
-    // Habilitar o deshabilitar botón de Guardar
-    const btnGuardar = document.getElementById('btn_guardar');
-    if (totalCobrado > 0) {
-        btnGuardar.classList.remove('disabled');
-        calculoTemporal = { km: kmRegistrado, total: totalCobrado, moto: descMoto, gas: descGas, neto: neto };
+    const btn = document.getElementById('btn_guardar');
+    if (total > 0) {
+        btn.classList.remove('disabled');
+        calculoTemporal = { km: kmReg, total: total, moto: dMoto, gas: dGas, neto: neto };
     } else {
-        btnGuardar.classList.add('disabled');
-        calculoTemporal = null;
+        btn.classList.add('disabled');
     }
 }
 
-// 5. REGISTRAR EL VIAJE (El botón final)
 function registrarViaje() {
-    if (!calculoTemporal) return; // Si la previsualización está en cero, no hace nada.
-
-    const cliente = document.getElementById('inp_cliente').value || "Cliente General";
-    const desc = document.getElementById('inp_desc').value || "Sin descripción";
-    const tipo = document.getElementById('inp_tipo').value;
-    
-    const fechaActual = new Date();
-    const nuevoViaje = {
+    if (!calculoTemporal) return;
+    const v = {
         id: Date.now(),
-        fecha: fechaActual.toLocaleDateString('es-VE'),
-        hora: fechaActual.toLocaleTimeString('es-VE', {hour: '2-digit', minute:'2-digit'}),
-        cliente: cliente,
-        descripcion: desc,
-        tipo: tipo,
-        km: calculoTemporal.km,
-        total: calculoTemporal.total,
-        moto: calculoTemporal.moto,
-        gas: calculoTemporal.gas,
-        neto: calculoTemporal.neto
+        cliente: document.getElementById('inp_cliente').value || "Cliente Gral",
+        desc: document.getElementById('inp_desc').value || "Sin descripción",
+        tipo: document.getElementById('inp_tipo').value,
+        ...calculoTemporal,
+        fecha: new Date().toLocaleDateString('es-VE'),
+        hora: new Date().toLocaleTimeString('es-VE', {hour:'2-digit', minute:'2-digit'})
     };
-
-    // Guardar Historial
-    bd_joselito.unshift(nuevoViaje); 
+    bd_joselito.unshift(v);
     localStorage.setItem('joselito_db', JSON.stringify(bd_joselito));
-
-    // Sumar a la Caja Fuerte y guardar
     cajaFuerte += calculoTemporal.total;
     actualizarCajaVisual();
-
-    renderizarLogs();
     
-    // Feedback visual y limpieza
     document.getElementById('msg_exito').classList.remove('hidden');
-    setTimeout(() => document.getElementById('msg_exito').classList.add('hidden'), 3000);
-
-    document.getElementById('inp_cliente').value = '';
-    document.getElementById('inp_desc').value = '';
+    setTimeout(() => document.getElementById('msg_exito').classList.add('hidden'), 2000);
+    
     document.getElementById('inp_km').value = '';
     document.getElementById('inp_monto_fijo').value = '';
-    calcularPreview(); // Reinicia la vista previa a cero
+    calcularPreview();
 }
 
-// 6. RENDERIZAR LOGS
 function renderizarLogs() {
-    const contenedor = document.getElementById('lista_logs');
-    contenedor.innerHTML = '';
-
-    if (bd_joselito.length === 0) {
-        contenedor.innerHTML = '<p class="text-muted text-small text-center mt-2">No hay viajes registrados aún.</p>';
-        return;
-    }
-
+    const list = document.getElementById('lista_logs');
+    list.innerHTML = bd_joselito.length === 0 ? '<p style="text-align:center; color:#8e8e93; font-size:13px; margin-top:20px;">Sin historial</p>' : '';
     bd_joselito.forEach(v => {
-        contenedor.innerHTML += `
-        <div class="log-item">
-            <div class="log-header">
-                <span class="log-cliente bold">${v.cliente}</span>
-                <span class="text-green bold text-large">$${v.total.toFixed(2)}</span>
-            </div>
-            <div class="text-small text-muted mt-1">
-                📅 ${v.fecha} - 🕒 ${v.hora} <br>
-                🚚 ${v.tipo} | 📏 ${v.km} KM <br>
-                <em>"${v.descripcion}"</em>
-            </div>
+        list.innerHTML += `<div class="log-item">
+            <div class="row"><strong style="font-size:15px">${v.cliente}</strong><strong style="color:#30d158">$${v.total.toFixed(2)}</strong></div>
+            <div style="font-size:11px; color:#8e8e93; line-height:1.4">📅 ${v.fecha} • 🕒 ${v.hora}<br>🚚 ${v.tipo} • 📏 ${v.km} KM<br><em>${v.desc}</em></div>
         </div>`;
     });
 }
 
-// 7. EXPORTADOR A EXCEL (CSV)
 function exportarExcel() {
-    if (bd_joselito.length === 0) return alert("No hay datos para exportar.");
-
-    let csvContent = "data:text/csv;charset=utf-8,";
-    csvContent += "Fecha,Hora,Cliente,Descripcion,Tipo,KM,Total Cobrado ($),Desc Moto ($),Desc Gasolina ($),Ganancia Neta ($)\n";
-
+    let csv = "data:text/csv;charset=utf-8,Fecha,Hora,Cliente,Desc,Tipo,KM,Total,Moto,Gas,Neto\n";
     bd_joselito.forEach(v => {
-        let fila = `"${v.fecha}","${v.hora}","${v.cliente}","${v.descripcion}","${v.tipo}","${v.km}","${v.total.toFixed(2)}","${v.moto.toFixed(2)}","${v.gas.toFixed(2)}","${v.neto.toFixed(2)}"`;
-        csvContent += fila + "\n";
+        csv += `${v.fecha},${v.hora},${v.cliente},${v.desc},${v.tipo},${v.km},${v.total},${v.moto},${v.gas},${v.neto}\n`;
     });
-
-    const encodedUri = encodeURI(csvContent);
     const link = document.createElement("a");
-    link.setAttribute("href", encodedUri);
-    link.setAttribute("download", `Joselito_Reporte_${new Date().toLocaleDateString('es-VE')}.csv`);
-    document.body.appendChild(link);
+    link.href = encodeURI(csv);
+    link.download = `Joselito_Data.csv`;
     link.click();
-    document.body.removeChild(link);
 }
 
-// 8. SISTEMA DE GRÁFICOS (CHART.JS)
 function renderizarGrafico() {
-    let totalMoto = 0;
-    let totalNeto = 0;
-    let ingresosPorTipo = { 'Delivery': 0, 'MotoTaxi': 0, 'Mandado': 0 };
-
-    bd_joselito.forEach(v => {
-        totalMoto += v.moto;
-        totalNeto += v.neto;
-        if(ingresosPorTipo[v.tipo] !== undefined) ingresosPorTipo[v.tipo] += v.total;
-    });
-
-    document.getElementById('stat_moto').innerText = "$" + totalMoto.toFixed(2);
-    document.getElementById('stat_neta').innerText = "$" + totalNeto.toFixed(2);
-
+    let tM = 0, tN = 0, tipos = {Delivery:0, MotoTaxi:0, Mandado:0};
+    bd_joselito.forEach(v => { tM += v.moto; tN += v.neto; if(tipos[v.tipo]!==undefined) tipos[v.tipo] += v.total; });
+    document.getElementById('stat_moto').innerText = "$" + tM.toFixed(0);
+    document.getElementById('stat_neta').innerText = "$" + tN.toFixed(0);
+    if (typeof Chart === 'undefined') return;
     const ctx = document.getElementById('miGrafico').getContext('2d');
     if (chartInstance) chartInstance.destroy();
-
     chartInstance = new Chart(ctx, {
-        type: 'bar',
+        type: 'doughnut',
         data: {
-            labels: ['Delivery', 'MotoTaxi', 'Mandado'],
-            datasets: [{
-                label: 'Ingresos por Servicio ($)',
-                data: [ingresosPorTipo['Delivery'], ingresosPorTipo['MotoTaxi'], ingresosPorTipo['Mandado']],
-                backgroundColor: ['#3b82f6', '#fbbf24', '#22c55e'],
-                borderRadius: 5
-            }]
+            labels: ['Deli', 'Taxi', 'Man'],
+            datasets: [{ data: [tipos.Delivery, tipos.MotoTaxi, tipos.Mandado], backgroundColor: ['#0a84ff', '#ffd60a', '#30d158'], borderWidth: 0 }]
         },
-        options: {
-            responsive: true, maintainAspectRatio: false,
-            plugins: { legend: { display: false } },
-            scales: {
-                y: { beginAtZero: true, grid: { color: '#27272a' }, ticks: { color: '#a1a1aa' } },
-                x: { grid: { display: false }, ticks: { color: '#a1a1aa' } }
-            }
-        }
+        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom', labels: { color: '#8e8e93', font: { size: 10 } } } } }
     });
 }
 
-// 9. BORRADO SEGURO
+function enviarWaRapido() {
+    const t = document.getElementById('prev_total').innerText;
+    const c = document.getElementById('inp_cliente').value || "estimado";
+    const d = document.getElementById('inp_desc').value || "Servicio";
+    const msg = `Hola *${c}*, tu servicio de *${d}* sale en *$${t}*. ¿Me confirmas? 🛵`;
+    window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`);
+}
+
 function borrarHistorial() {
-    const codigo = prompt("Peligro: Esto borrará tu historial permanentemente. Escribe '1234' para confirmar:");
-    if (codigo === '1234') {
-        localStorage.removeItem('joselito_db');
-        localStorage.removeItem('joselito_caja');
-        bd_joselito = [];
-        cajaFuerte = 0;
-        actualizarCajaVisual();
-        renderizarLogs();
-        renderizarGrafico();
-        alert("Base de datos borrada con éxito.");
-    } else {
-        alert("Borrado cancelado. Código incorrecto.");
-    }
+    if (confirm("¿Borrar todo?")) { localStorage.clear(); location.reload(); }
 }
