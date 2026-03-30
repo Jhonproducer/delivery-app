@@ -15,13 +15,14 @@
             <p>Sistema de Gestión Integral</p>
         </div>
         <div class="caja-total">
-            <span class="text-muted">Caja Fuerte</span>
-            <strong id="caja_global">$0.00</strong>
+            <span class="text-muted">Caja Fuerte <button onclick="editarCaja()" class="btn-icon">✏️</button></span>
+            <strong id="caja_global" class="text-green">$0.00</strong>
         </div>
     </header>
 
     <main class="container">
         <section id="vista_operaciones" class="view active">
+            
             <div class="card">
                 <h2>1. Registro del Viaje</h2>
                 <input type="text" id="inp_cliente" class="input" placeholder="Cliente o Referencia">
@@ -33,8 +34,9 @@
                 </select>
             </div>
 
-            <div class="card highlight">
-                <h2 class="text-gold">2. Tu Tarifa Dinámica</h2>
+            <div class="card border-gold">
+                <h2 class="text-gold">2. Tarifa y Porcentajes</h2>
+                
                 <div class="tabs-tarifa">
                     <button class="btn-tab active" onclick="setModo('km')">Por KM</button>
                     <button class="btn-tab" onclick="setModo('plana')">Tarifa Plana</button>
@@ -42,53 +44,77 @@
 
                 <div id="modo_km" class="grid-2 mt-1">
                     <div>
-                        <label>Distancia (KM)</label>
-                        <input type="number" id="inp_km" class="input" placeholder="Ej: 5.5">
+                        <label>KM (Visto en Maps)</label>
+                        <input type="number" id="inp_km" class="input trigger-calc" placeholder="Ej: 5.5">
                     </div>
                     <div>
                         <label>Precio x KM ($)</label>
-                        <input type="number" id="inp_precio_km" class="input text-gold bold" placeholder="Ej: 0.80">
+                        <input type="number" id="inp_precio_km" class="input text-gold bold trigger-calc" placeholder="Ej: 0.80">
                     </div>
                 </div>
 
                 <div id="modo_plana" class="mt-1 hidden">
-                    <label>Monto Fijo ($)</label>
-                    <input type="number" id="inp_monto_fijo" class="input text-gold bold" placeholder="Ej: 5.00">
+                    <label>Monto Fijo Total ($)</label>
+                    <input type="number" id="inp_monto_fijo" class="input text-gold bold trigger-calc" placeholder="Ej: 5.00">
                 </div>
 
-                <button onclick="calcularYGuardar()" class="btn btn-gold mt-2">CALCULAR Y GUARDAR</button>
+                <div class="grid-2 mt-2 bg-dark p-2 rounded">
+                    <div>
+                        <label>Descuento Moto (%)</label>
+                        <input type="number" id="inp_pct_moto" class="input border-blue trigger-calc" value="20">
+                    </div>
+                    <div>
+                        <label>Descto Gasolina (%)</label>
+                        <input type="number" id="inp_pct_gas" class="input border-red trigger-calc" value="10">
+                    </div>
+                </div>
+            </div>
+
+            <div class="card preview-box">
+                <h2 class="text-muted">3. Previsualización</h2>
+                <div class="flex-between mt-1">
+                    <span class="text-small text-muted">A Cobrar al Cliente:</span>
+                    <strong class="text-large text-gold">$<span id="prev_total">0.00</span></strong>
+                </div>
+                <div class="flex-between mt-1 border-t pt-1">
+                    <span class="text-small text-muted">Para Moto (<span id="lbl_moto">20</span>%):</span>
+                    <strong class="text-blue">-$<span id="prev_moto">0.00</span></strong>
+                </div>
+                <div class="flex-between mt-1">
+                    <span class="text-small text-muted">Para Gasolina (<span id="lbl_gas">10</span>%):</span>
+                    <strong class="text-red">-$<span id="prev_gas">0.00</span></strong>
+                </div>
+                <div class="flex-between mt-1 border-t pt-1">
+                    <span class="bold">TU GANANCIA LÍQUIDA:</span>
+                    <strong class="text-large text-green">$<span id="prev_neto">0.00</span></strong>
+                </div>
+
+                <button id="btn_guardar" onclick="registrarViaje()" class="btn btn-gold mt-2 disabled">💾 REGISTRAR VIAJE</button>
             </div>
             
-            <div id="msg_exito" class="msg-success hidden">¡Viaje registrado en tu base de datos!</div>
+            <div id="msg_exito" class="msg-success hidden">¡Viaje registrado y caja actualizada!</div>
         </section>
 
         <section id="vista_logs" class="view hidden">
             <div class="card flex-between">
                 <h2>Historial de Operaciones</h2>
-                <button onclick="exportarExcel()" class="btn btn-blue text-small">💾 EXPORTAR EXCEL</button>
+                <button onclick="exportarExcel()" class="btn btn-blue text-small">💾 EXPORTAR CSV</button>
             </div>
-            
-            <div id="lista_logs" class="logs-container">
-                </div>
-            
+            <div id="lista_logs" class="logs-container"></div>
             <button onclick="borrarHistorial()" class="btn btn-danger mt-2">🚨 BORRAR TODOS LOS DATOS</button>
         </section>
 
         <section id="vista_graficos" class="view hidden">
             <div class="card">
                 <h2>Rendimiento Financiero</h2>
-                <p class="text-muted text-small mb-1">Ganancias generadas en los últimos viajes</p>
-                <div class="chart-container">
-                    <canvas id="miGrafico"></canvas>
-                </div>
-                
+                <div class="chart-container"><canvas id="miGrafico"></canvas></div>
                 <div class="grid-2 mt-2">
                     <div class="stat-box border-blue">
-                        <span class="text-muted text-small">Fondo Moto Total</span>
+                        <span class="text-muted text-small">Fondo Moto Histórico</span>
                         <strong class="text-blue text-large" id="stat_moto">$0.00</strong>
                     </div>
                     <div class="stat-box border-green">
-                        <span class="text-muted text-small">Tu Ganancia Neta</span>
+                        <span class="text-muted text-small">Ganancia Neta Histórica</span>
                         <strong class="text-green text-large" id="stat_neta">$0.00</strong>
                     </div>
                 </div>
