@@ -1,7 +1,8 @@
-// Joselito OS V6.0 - FELLOW EDITION
-let bd_joselito = JSON.parse(localStorage.getItem('joselito_db')) || [];
+// Joselito OS V7.0 - DOBLE LIBRO CONTABLE
+let bd_diaria = JSON.parse(localStorage.getItem('joselito_diario')) || [];
+let bd_archivo = JSON.parse(localStorage.getItem('joselito_archivo')) || []; // LA BÓVEDA INVISIBLE
 let cajaFuerte = parseFloat(localStorage.getItem('joselito_caja')) || 0;
-let tasaBCV = 47.0; // Respaldo
+let tasaBCV = 47.0; 
 let modoTarifa = 'km';
 let calculoTemporal = null;
 
@@ -10,9 +11,16 @@ document.addEventListener('DOMContentLoaded', () => {
     actualizarCajaVisual();
     calcularPreview();
     renderizarLogs();
+    
+    // Cambiamos la función del botón de borrar en el HTML dinámicamente
+    const btnBorrar = document.querySelector('.danger-link');
+    if(btnBorrar) {
+        btnBorrar.innerText = "🌙 Cerrar Día (Limpiar pantalla, guardar en Excel)";
+        btnBorrar.onclick = cerrarDia;
+    }
 });
 
-// 1. TASA BCV DINÁMICA
+// 1. TASA BCV
 async function fetchTasaBCV() {
     const bcvNav = document.getElementById('bcv_val_nav');
     bcvNav.innerText = "Sinc...";
@@ -29,7 +37,7 @@ async function fetchTasaBCV() {
     } catch (e) { bcvNav.innerText = "Error API"; }
 }
 
-// 2. GESTIÓN DE CARTERA
+// 2. MI CARTERA
 function actualizarCajaVisual() {
     document.getElementById('caja_global').innerText = "$" + cajaFuerte.toFixed(2);
     localStorage.setItem('joselito_caja', cajaFuerte);
@@ -43,7 +51,7 @@ function editarCaja() {
     }
 }
 
-// 3. MOTOR DE CÁLCULO
+// 3. CALCULADORA
 function calcularPreview() {
     let totalUSD = 0;
     let pMoto = parseFloat(document.getElementById('inp_pct_moto').value) || 0;
@@ -61,7 +69,6 @@ function calcularPreview() {
     let dGas = totalUSD * (pGas / 100);
     let neto = totalUSD - dMoto - dGas;
 
-    // Pintar UI
     document.getElementById('prev_total').innerText = totalUSD.toFixed(2);
     document.getElementById('prev_total_bs').innerText = (totalUSD * tasaBCV).toFixed(2);
     document.getElementById('prev_moto').innerText = dMoto.toFixed(2);
@@ -77,20 +84,30 @@ function calcularPreview() {
     } else { btn.classList.add('disabled'); }
 }
 
-// 4. REGISTRO Y WHATSAPP
+// 4. GUARDAR EN DOBLE LIBRO CONTABLE
 function registrarViaje() {
     if (!calculoTemporal) return;
+    
+    const kmInput = document.getElementById('inp_km').value;
+    
     const v = {
         id: Date.now(),
         cliente: document.getElementById('inp_cliente').value || "Cliente",
         desc: document.getElementById('inp_desc').value || "Servicio",
         tipo: document.getElementById('inp_tipo').value,
+        km: modoTarifa === 'km' ? kmInput : "Fijo",
         ...calculoTemporal,
         fecha: new Date().toLocaleDateString('es-VE'),
         hora: new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})
     };
-    bd_joselito.unshift(v);
-    localStorage.setItem('joselito_db', JSON.stringify(bd_joselito));
+    
+    // 1. Guardar en Pantalla de Hoy
+    bd_diaria.unshift(v);
+    localStorage.setItem('joselito_diario', JSON.stringify(bd_diaria));
+    
+    // 2. Guardar en la Bóveda del Excel (PARA SIEMPRE)
+    bd_archivo.unshift(v);
+    localStorage.setItem('joselito_archivo', JSON.stringify(bd_archivo));
     
     // Sumar a cartera
     cajaFuerte += calculoTemporal.total;
@@ -131,33 +148,50 @@ function setModo(m) {
     calcularPreview();
 }
 
+// Dibuja SOLO los viajes de HOY en la pantalla
 function renderizarLogs() {
     const l = document.getElementById('lista_logs');
-    l.innerHTML = bd_joselito.length === 0 ? '<p style="text-align:center; font-size:12px; color:#8e8e93">Vaciío</p>' : '';
-    bd_joselito.forEach(v => {
+    l.innerHTML = bd_diaria.length === 0 ? '<p style="text-align:center; font-size:12px; color:#8e8e93">No hay viajes en el día actual</p>' : '';
+    bd_diaria.forEach(v => {
         l.innerHTML += `<div class="log-item">
             <div style="display:flex; justify-content:space-between"><strong>${v.cliente}</strong><strong style="color:#30d158">$${v.total.toFixed(2)}</strong></div>
-            <div style="font-size:10px; color:#8e8e93">📅 ${v.fecha} • 🕒 ${v.hora}<br>${v.desc}</div>
+            <div style="font-size:10px; color:#8e8e93">📅 ${v.fecha} • 🕒 ${v.hora} • ${v.km} KM<br>${v.desc}</div>
         </div>`;
     });
 }
 
+// Exporta TODOS los viajes de la Bóveda Maestra
 function exportarExcel() {
-    let csv = "Fecha,Hora,Cliente,Tipo,Total,Neto,Moto,Gas\n";
-    bd_joselito.forEach(v => { csv += `${v.fecha},${v.hora},${v.cliente},${v.tipo},${v.total},${v.neto},${v.moto},${v.gas}\n`; });
+    if (bd_archivo.length === 0) return alert("Aún no tienes ningún viaje registrado en tu historia.");
+    
+    let csv = "Fecha,Hora,Cliente,Descripcion,Tipo,KM,Total ($),Fondo Moto ($),Gasolina ($),Neto ($)\n";
+    bd_archivo.forEach(v => { 
+        // Formateo limpio para Excel
+        let descLimpia = v.desc.replace(/,/g, " "); 
+        csv += `${v.fecha},${v.hora},${v.cliente},${descLimpia},${v.tipo},${v.km},${v.total},${v.moto},${v.gas},${v.neto}\n`; 
+    });
+    
     const link = document.createElement("a");
     link.href = encodeURI("data:text/csv;charset=utf-8," + csv);
-    link.download = `Joselito_Reporte.csv`;
+    link.download = `Joselito_Data_Maestra_${new Date().toLocaleDateString('es-VE')}.csv`;
     link.click();
 }
 
+// 6. CERRAR EL DÍA (La magia)
+function cerrarDia() {
+    if(confirm("🌙 ¿Quieres cerrar el día? Esto limpiará el historial de la pantalla para empezar mañana, pero TODOS tus viajes seguirán guardados para cuando descargues el Excel.")) {
+        // Solo borramos el diario, el archivo maestro queda intacto
+        bd_diaria = [];
+        localStorage.setItem('joselito_diario', JSON.stringify(bd_diaria));
+        renderizarLogs();
+        alert("¡Día cerrado con éxito! Tu Excel maestro sigue a salvo.");
+    }
+}
+
+// 7. CONVERSOR PESTAÑA 3
 function convertirMoneda(tipo) {
     const usd = document.getElementById('conv_usd');
     const bs = document.getElementById('conv_bs');
     if (tipo === 'usd') bs.value = (parseFloat(usd.value) * tasaBCV).toFixed(2);
     else usd.value = (parseFloat(bs.value) / tasaBCV).toFixed(2);
-}
-
-function borrarHistorial() {
-    if(confirm("¿Borrar todo el sistema?")) { localStorage.clear(); location.reload(); }
 }
